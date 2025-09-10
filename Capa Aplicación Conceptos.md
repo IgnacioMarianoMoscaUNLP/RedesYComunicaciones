@@ -248,3 +248,33 @@ Un **Web cache** o **proxy server** es una entidad de red que responde solicitud
    - Si **cambió** → reenvía el objeto actualizado con nueva fecha.
 
    👉 Así, el cache garantiza que los clientes reciban contenido **actualizado** sin necesidad de transferir objetos innecesariamente, optimizando **ancho de banda y tiempo de respuesta**.
+
+#### **HTTP/2**
+
+Uno de los principales logros fue reducir la latencia permitiendo solicitudes y respuestas múltiplexadas en una misma conexión TCP, provee una priorización de solicitud  a la respuesta del server, y provee una compresión eficiente de los headers HTTP. 
+
+No cambia los métodos HTTP ya utilizados y tampoco los códigos de respuesta, URLs, los campos de headers. 
+
+Lo que si cambia HTTP es como **la data está formateada y transportada entre el cliente y serve**
+
+Uno de los principales que vino a solucionar es el **HOL BLOCKING**, el bloqueo de head of line, que básicamente lo que sucedía es que en una misma conexión donde se pasaban varios elementos de una web, había elementos que retrasaban la llegada de otros elementos que venían luego, por ejemplo un video que retrasaba elementos de la misma página. Dicho problema generaba un delay o retraso en el envío de páginas web completas con sus elementos y también hacía que tcp genere más de una conexión para enviar los elementos que estaban retrasados. Por ende http permitió que en una misma conexión se puedan compartir varios elementos sin importar un orden estricto. Lo cual a la vez solucionaba que al no generar varias conexiones tcp, no se afectará a la congestión de red.
+
+**http/2 framing**
+
+La solución al HOLB fue dividir los mensajes en marcos más pequeños e intercalarlos en los mensajes de solicitudes y respuestas en la misma conexión TCP. 
+
+Con este altercado de frames podemos enviar elementos de la web sin necesidad de esperar a que se envíen todos los elementos grandes, permitiendo que el usuario no tenga esa sensación de delay y pueda visualizar elementos de la página con a lo sumo retraso de los elementos más grandes que tardan más tiempo en llegar. 
+
+El manejo de dividir mensajes en frames, transportalos de manera altercada y luego volver a unir esos frames es la funcionalidad escencial que trajo la versión y es realizado por la sub-capa de manejo de frames del protocolo. 
+
+Cuando el server quiere hacer frames de un mismo mensaje para aprovechar el interleaven, lo pasa a la subcapa de framing y ahí se descompone en pequños marcos. Los headers se vuelven un frame, el body del mensaje se torna en varios frames. Luego se van enviando los frames a través de la misma conexión TCP. En el lado del cliente se rensamblan los frames, lo hace el browser así obtiene las respuestas completas o lo elementos solicitados. 
+
+La subcapa de framing se encarga de encodear los frames en binario. Lo que hace al protocolo más eficiente para parsear, hacer frames más pequeños y menos propenso los errores. 
+
+Una funcionalidad clave es que se permite **priorizar solicitudes** mediante un indicador en los headers que indica la el número de prioridad de 1 a 256, siendo 256 la prioridad más alta. Esto le sirve al server para saber que frames enviar antes. 
+
+Otra gran funcionalidad es que las conexiones persistentes con multiplexación permiten enviar al servidor, **PUSHEAR**, elementos que no han sido solicitados por el cliente. Esto gracias a que HTML permite saber los posibles elementos que se necesitarán y por ende el server puede enviar elementos que el cliente no solicito de una página que pidió. Esto elimina latencia freante a la espera de que los clientes soliciten. 
+
+**HTTP/3**
+
+- **QUIC** simpemente saber que es un nuevo protocolo que se ejecuta en **udp **. Implementa interleaving, flujo de control por streams, baja lantencia para establecer conexiones. Es un nuevo protocolo HTTP.

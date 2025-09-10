@@ -340,22 +340,49 @@ c. Suponga que desea enviar un requerimiento con la versión de HTTP 1.1 desde c
 
 19. ¿Cuál es la diferencia entre un protocolo binario y uno basado en texto? ¿De qué tipo de protocolo se trata HTTP/1.0, HTTP/1.1 y HTTP/2?
 
-20. Responder las siguientes preguntas:
-    a. ¿Qué función cumple la cabecera Host en HTTP 1.1? ¿Existía en HTTP 1.0?
-    ¿Qué sucede en HTTP/2? (Ayuda:
-    4
-    Redes y Comunicaciones LINTI - UNLP
-    https://undertow.io/blog/2015/04/27/An-in-depth-overview-of-HTTP2.html para
-    HTTP/2)
-    b. En HTTP/1.1, ¿es correcto el siguiente requerimiento?
-    GET /index.php HTTP/1.1
-    User-Agent: curl/7.54.0
-    c. ¿Cómo quedaría en HTTP/2 el siguiente pedido realizado en HTTP/1.1 si se
-    está usando https?
-    GET /index.php HTTP/1.1
-    Host: www.info.unlp.edu.ar
-    Ejercicio de Parcial
-    curl -X ?? www.redes.unlp.edu.ar/??
+Uno basado en binario es HTTP/2 y está hecho para que los headers y el body de los mensajes estén codificados en binario lo que permite un mejor parseo, tamaños de mensajes más pequeños, y menos propensos a tener errores. El parseo refiere a que son más fáciles de analizar por progrmas y ser comparados. 
+
+HTTP/1.0 e /1.1 son basados en texto, es decir, ascii. Basicamente sus headers y bodys viajan en texto plano, no tienen las ventajas mencionadas sobre http/2 por ser basado en binario. 
+
+Se puede resumir en que **textual ** es más fácil para humanos pero más costoso para máquina. En cambio en **binario** es más difícil de entender para humanos pero mucho más eficiente para máquinas. 
+
+20.Responder las siguientes preguntas:
+a. ¿Qué función cumple la cabecera Host en HTTP 1.1? ¿Existía en HTTP 1.0?
+¿Qué sucede en HTTP/2? (Ayuda:
+https://undertow.io/blog/2015/04/27/An-in-depth-overview-of-HTTP2.html para HTTP/2)
+
+En HTTP1.1 cumple la función de indicar el dominio del servidor al que se solicita. También tiene la opción de indicar puerto pero en caso de no tenerlo se ve el protocolo usado para solicitud para saber a que puerto enviar el mensaje. 
+
+El dominio sirve para asociar con hosting virtual. indica al servidor el nombre de dominio al que  el cliente quiere acceder, aunque todos los dominios compartan la misma IP.
+
+En HTTP1.0 no existía porque cada cliente hacía solicitud a una ruta específica ya que cada servidor tenía una sola dirección IP para un solo sitio web. Entonces, con la IP a la que se conectaba el cliente ya alcanzaba para saber a qué página pedir el recurso. 
+
+El problema empezó con el **hosting virtual** en el que un servidor con una sola IP servía a varios dominios distintos, el servidor no podía distinguir a qué dominio se refería el cliente
+
+Para HTTP/2.0 el header host sigue siendo soportado pero ahora se utiliza como estándar el pseudo eader :authority que cumple el mismo rol. Los servidores hoy buscan primero el :authority y en caso de no estar buscar el host. 
+
+b. En HTTP/1.1, ¿es correcto el siguiente requerimiento?
+GET /index.php HTTP/1.1
+User-Agent: curl/7.54.0
+
+NO es correcto porque le falta el cabezal de host
+
+c. ¿Cómo quedaría en HTTP/2 el siguiente pedido realizado en HTTP/1.1 si se está usando https?
+GET /index.php HTTP/1.1
+Host: www.info.unlp.edu.ar
+
+
+
+```html
+:method: GET
+:scheme: https
+:authority: www.info.unlp.edu.ar
+:path: /index.php
+
+```
+
+Ejercicio de Parcial
+curl -X ?? www.redes.unlp.edu.ar/??
 
 > HEAD /metodos/ HTTP/??
 > Host: www.redes.unlp.edu.ar
@@ -367,12 +394,30 @@ c. Suponga que desea enviar un requerimiento con la versión de HTTP 1.1 desde c
 > < Content-Type: text/html; charset=UTF-8
 > < Connection: close
 > a. ¿Qué versión de HTTP podría estar utilizando el servidor?
-> b. ¿Qué método está utilizando? Dicho método, ¿retorna el recurso completo
-> solicitado?
+>
+> Podría estar utilizando HTTP/1.0 porque cerro la conexión luego de recibir el recurso (aunque esto no es suficiente para decir) y además el cabezal host está puesto, pero sabemos que en http/1.0 era opcional por ende no necesariamente es http/1.1. 
+>
+> En relación a esto último podemos decir que el comando curl al hacer -H sabemos que está poniendo el header host adrede y terminar de concluir que es HTTP/1.0 el protocolo utilizado. 
+>
+> No queda muy claro, podría estar usando tanto la versión del protocolo 1.1 como la 1.0.
+>
+> b. ¿Qué método está utilizando? Dicho método, ¿retorna el recurso completo solicitado?
+>
+> Está utilizando el método HEAD el cual no retorna todo recurso sino los headers de la respuesta del servidor, sin el body donde vendría el recurso.
+>
 > c. ¿Cuál es el recurso solicitado?
+>
+> El recurso solicitado es el index.html de /metodos/.Digo esto porque al terminar el recurso en barra, esto según leí indica un index.html del path solicitado. 
+>
 > d. ¿El método funcionó correctamente?
+>
+> SI, el código de respuesta indica que fue exitoso.
+>
 > e. Si la solicitud hubiera llevado un encabezado que diga:
 > If-Modified-Since: Sat, 20 Jan 2018 13:02:41 GMT
 > ¿Cuál habría sido la respuesta del servidor web? ¿Qué habría hecho el
 > navegador en este caso?
-> 5
+>
+> El código de respuesta habróia sido  304 que indica que no fue modificado el recurso desde la fecha solicitada, porque con la anterior respuesta podemos ver que el recurso fue modificado por última vez en la misma fecha del cabezal If-Modified des este punto. 
+>
+> El servidor responde con la copia del recurso que tiene guardada en caché.
